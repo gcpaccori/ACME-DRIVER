@@ -45,6 +45,11 @@ final routerProvider = Provider<GoRouter>((ref) {
           state.matchedLocation == AppRoutes.forgotPassword;
 
       if (isLoading) return null; // stay on splash
+      // Las cuentas de repartidor las crea ACME desde el panel; no hay registro en la app.
+      if (state.matchedLocation == AppRoutes.signUp ||
+          state.matchedLocation == AppRoutes.signUpSteps) {
+        return isAuth ? AppRoutes.home : AppRoutes.login;
+      }
       if (isSplash && !isLoading) {
         return isAuth ? AppRoutes.home : AppRoutes.login;
       }

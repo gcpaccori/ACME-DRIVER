@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
+import '../constants/app_strings.dart';
 
 extension ContextExtensions on BuildContext {
   ThemeData get theme => Theme.of(this);
@@ -33,6 +34,12 @@ extension StringExtensions on String {
       r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
     );
     return emailRegex.hasMatch(this);
+  }
+
+  // Los repartidores inician sesión con el correo @acmedidos.com que les crea ACME.
+  bool get isAcmedidosEmail {
+    final normalized = trim().toLowerCase();
+    return normalized.isValidEmail && normalized.endsWith('@${AppStrings.internalEmailDomain}');
   }
 
   // Validate strong password
