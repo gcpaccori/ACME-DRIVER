@@ -89,12 +89,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 AppTextField(
                   controller: _emailController,
                   label: AppStrings.email,
-                  hint: 'tu@correo.com',
+                  hint: AppStrings.internalEmailHint,
                   keyboardType: TextInputType.emailAddress,
                   prefixIcon: const Icon(Icons.email_outlined),
                   validator: (v) {
                     if (v == null || v.isEmpty) return 'Ingresa tu correo';
                     if (!v.isValidEmail) return 'Correo inválido';
+                    if (!v.isAcmedidosEmail) return AppStrings.internalEmailError;
                     return null;
                   },
                 ),
@@ -140,23 +141,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
                 const SizedBox(height: 24),
                 Center(
-                  child: TextButton(
-                    onPressed: () => context.push(AppRoutes.signUpSteps),
-                    child: RichText(
-                      text: TextSpan(
-                        text: '¿No tienes cuenta? ',
-                        style: context.textTheme.bodyMedium,
-                        children: const [
-                          TextSpan(
-                            text: 'Regístrate aquí',
-                            style: TextStyle(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                  child: Text(
+                    AppStrings.accountsCreatedByAcme,
+                    textAlign: TextAlign.center,
+                    style: context.textTheme.bodyMedium,
                   ),
                 ),
                 const SizedBox(height: 32),

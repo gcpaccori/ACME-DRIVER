@@ -1,5 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/constants/app_strings.dart';
+import '../../../../core/extensions/extensions.dart';
 import '../../../../core/errors/app_exceptions.dart';
 import '../datasources/driver_profile_model.dart';
 
@@ -23,9 +25,13 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
   @override
   Future<DriverProfileModel> signIn(String email, String password) async {
+    if (!email.isAcmedidosEmail) {
+      throw const AppAuthException(AppStrings.internalEmailError);
+    }
+
     try {
       final response = await _client.auth.signInWithPassword(
-        email: email,
+        email: email.trim().toLowerCase(),
         password: password,
       );
 
@@ -41,6 +47,11 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       rethrow;
     } on AppRoleException {
       rethrow;
+    } on AuthException catch (e) {
+      if (e.message.toLowerCase().contains('invalid login credentials')) {
+        throw const AppAuthException(AppStrings.loginError);
+      }
+      throw AppAuthException(e.message);
     } catch (e) {
       throw AppAuthException(e.toString());
     }
@@ -49,46 +60,8 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<DriverProfileModel> signUp(
       String email, String password, Map<String, dynamic> metadata) async {
-    try {
-      final response = await _client.auth.signUp(
-        email: email,
-        password: password,
-      );
-
-      final user = response.user;
-      if (user == null) {
-        throw const AppAuthException('No se pudo crear el usuario');
-      }
-
-      // Create profile record with all fields
-      await _client.from(AppConstants.profilesTable).insert({
-        'id': user.id,
-        'full_name': metadata['fullName'],
-        'role': 'driver',
-        'phone': metadata['phone'] ?? '',
-        'address': metadata['address'] ?? '',
-        'identification_number': metadata['identificationNumber'] ?? '',
-        'identification_type': metadata['identificationType'] ?? 'cedula',
-        'notifications_enabled': metadata['notificationsEnabled'] ?? false,
-        'location_enabled': metadata['locationEnabled'] ?? false,
-      });
-
-      // Create driver record with all fields
-      await _client.from(AppConstants.driversTable).insert({
-        'user_id': user.id,
-        'vehicle_type': metadata['vehicleType'] ?? 'moto',
-        'license_plate': metadata['licensePlate'] ?? '',
-        'license_number': metadata['licenseNumber'] ?? '',
-        'bank_account': metadata['bankAccount'] ?? '',
-        'status': 'offline',
-        'is_active': true,
-        'is_verified': false,
-      });
-
-      return await _fetchDriverProfile(user.id);
-    } catch (e) {
-      throw AppAuthException(e.toString());
-    }
+    // Las cuentas de repartidor se crean desde el panel de ACME con un correo @acmedidos.com.
+    throw const AppAuthException(AppStrings.accountsCreatedByAcme);
   }
 
   @override
@@ -133,24 +106,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
 
   Future<DriverProfileModel> _fetchDriverProfile(String userId) async {
-    // First check the profile has role 'driver'
-    final profileData = await _client
-        .from(AppConstants.profilesTable)
-        .select()
-        .eq('id', userId)
-        .maybeSingle();
-
-    if (profileData == null) {
-      throw const AppAuthException('Perfil no encontrado');
-    }
-
-    final role = profileData['role'] as String?;
-    if (role != 'driver') {
-      await _client.auth.signOut();
-      throw const AppRoleException();
-    }
-
-    // Fetch driver-specific data
+    // Es repartidor quien tiene ficha en drivers (la crea el panel de ACME).
     final driverData = await _client
         .from(AppConstants.driversTable)
         .select()
@@ -158,14 +114,23 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         .maybeSingle();
 
     if (driverData == null) {
-      throw const AppAuthException('Datos de repartidor no encontrados');
+      await _client.auth.signOut();
+      throw const AppRoleException(AppStrings.roleError);
     }
+
+    final profileData = await _client
+        .from(AppConstants.profilesTable)
+        .select()
+        .eq('user_id', userId)
+        .maybeSingle();
 
     // Merge profile + driver data
     final merged = {
-      ...profileData,
+      ...?profileData,
       ...driverData,
-      'email': _client.auth.currentUser?.email ?? '',
+      'id': userId,
+      'user_id': userId,
+      'email': _client.auth.currentUser?.email ?? profileData?['email'] ?? '',
     };
 
     return DriverProfileModel.fromJson(merged);

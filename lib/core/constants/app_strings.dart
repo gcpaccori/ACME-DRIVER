@@ -10,6 +10,11 @@ class AppStrings {
   static const String recoverPassword = 'Recuperar contraseña';
   static const String loginError = 'Correo o contraseña incorrectos';
   static const String roleError = 'No tienes permiso para ingresar como repartidor';
+  static const String internalEmailDomain = 'acmedidos.com';
+  static const String internalEmailHint = 'nombre@acmedidos.com';
+  static const String internalEmailError = 'Usa tu correo @acmedidos.com';
+  static const String accountsCreatedByAcme =
+      'Tu cuenta @acmedidos.com la crea ACME PEDIDOS.\nSi aún no la tienes, pídela a tu administrador.';
 
   // Home
   static const String hello = 'Hola,';
