@@ -105,7 +105,7 @@ extension OrderStatusExtension on OrderStatus {
       case OrderStatus.assigned:
         return 'assigned';
       case OrderStatus.accepted:
-        return 'accepted';
+        return 'driver_accepted';
       case OrderStatus.pickedUp:
         return 'picked_up';
       case OrderStatus.onTheWay:
@@ -121,6 +121,7 @@ extension OrderStatusExtension on OrderStatus {
     switch (value) {
       case 'assigned':
         return OrderStatus.assigned;
+      case 'driver_accepted':
       case 'accepted':
         return OrderStatus.accepted;
       case 'picked_up':
@@ -130,6 +131,7 @@ extension OrderStatusExtension on OrderStatus {
       case 'delivered':
         return OrderStatus.delivered;
       case 'cancelled':
+      case 'failed':
         return OrderStatus.cancelled;
       default:
         return OrderStatus.assigned;

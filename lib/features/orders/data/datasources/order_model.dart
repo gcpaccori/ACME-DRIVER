@@ -26,31 +26,59 @@ class OrderModel extends Order {
     super.deliveredAt,
   });
 
-  factory OrderModel.fromJson(Map<String, dynamic> json) {
+  /// Construye el pedido desde la fila de orders (con merchants, merchant_branches
+  /// y order_delivery_details embebidos). [offered] indica que el pedido llega como
+  /// oferta pendiente de order_assignments.
+  factory OrderModel.fromJson(
+    Map<String, dynamic> json, {
+    String? assignedAt,
+    bool offered = false,
+  }) {
+    final merchant = _asMap(json['merchants']);
+    final branch = _asMap(json['merchant_branches']);
+    final branchAddress = _asMap(branch['addresses']);
+    final delivery = _asMap(json['order_delivery_details']);
+    final orderCode = json['order_code'];
+    final deliveryReference = delivery['reference_snapshot'] as String?;
+    final deliveryAddress = [
+      delivery['address_snapshot'] as String?,
+      if (deliveryReference != null && deliveryReference.isNotEmpty) 'Ref: $deliveryReference',
+    ].whereType<String>().where((part) => part.isNotEmpty).join(' · ');
+
     return OrderModel(
       id: json['id'] as String,
-      code: json['code'] as String? ?? '#000',
-      storeId: json['store_id'] as String? ?? '',
-      storeName: json['store_name'] as String? ?? 'Local',
-      storeAddress: json['store_address'] as String? ?? '',
-      storeLat: (json['store_lat'] as num?)?.toDouble() ?? 0.0,
-      storeLng: (json['store_lng'] as num?)?.toDouble() ?? 0.0,
-      storePhone: json['store_phone'] as String? ?? '',
+      code: orderCode != null ? '#$orderCode' : '#000',
+      storeId: json['branch_id'] as String? ?? '',
+      storeName: merchant['trade_name'] as String? ?? branch['name'] as String? ?? 'Local',
+      storeAddress: branchAddress['line1'] as String? ?? '',
+      storeLat: (branch['lat'] as num?)?.toDouble() ?? 0.0,
+      storeLng: (branch['lng'] as num?)?.toDouble() ?? 0.0,
+      storePhone: branch['phone'] as String? ?? '',
       customerId: json['customer_id'] as String? ?? '',
-      customerName: json['customer_name'] as String? ?? 'Cliente',
-      customerPhone: json['customer_phone'] as String? ?? '',
-      deliveryAddress: json['delivery_address'] as String? ?? '',
-      deliveryLat: (json['delivery_lat'] as num?)?.toDouble() ?? 0.0,
-      deliveryLng: (json['delivery_lng'] as num?)?.toDouble() ?? 0.0,
-      totalAmount: (json['total_amount'] as num?)?.toDouble() ?? 0.0,
+      customerName: delivery['recipient_name'] as String? ?? 'Cliente',
+      customerPhone: delivery['recipient_phone'] as String? ?? '',
+      deliveryAddress: deliveryAddress,
+      deliveryLat: (delivery['lat'] as num?)?.toDouble() ?? 0.0,
+      deliveryLng: (delivery['lng'] as num?)?.toDouble() ?? 0.0,
+      totalAmount: (json['total'] as num?)?.toDouble() ?? 0.0,
       deliveryFee: (json['delivery_fee'] as num?)?.toDouble() ?? 0.0,
-      status: OrderStatusExtension.fromString(json['status'] as String? ?? 'assigned'),
-      driverId: json['driver_id'] as String?,
-      notes: json['notes'] as String?,
+      status: offered
+          ? OrderStatus.assigned
+          : OrderStatusExtension.fromString(json['status'] as String? ?? 'assigned'),
+      driverId: json['current_driver_id'] as String?,
+      notes: json['special_instructions'] as String?,
       createdAt: DateTime.parse(json['created_at'] as String),
-      assignedAt: json['assigned_at'] != null ? DateTime.parse(json['assigned_at'] as String) : null,
+      assignedAt: assignedAt != null ? DateTime.parse(assignedAt) : null,
       deliveredAt: json['delivered_at'] != null ? DateTime.parse(json['delivered_at'] as String) : null,
     );
+  }
+
+  static Map<String, dynamic> _asMap(dynamic value) {
+    if (value is Map) return Map<String, dynamic>.from(value);
+    if (value is List && value.isNotEmpty && value.first is Map) {
+      return Map<String, dynamic>.from(value.first as Map);
+    }
+    return const {};
   }
 
   Map<String, dynamic> toJson() {
@@ -77,50 +105,4 @@ class OrderModel extends Order {
       'created_at': createdAt.toIso8601String(),
     };
   }
-}
-
-/// Mock orders for development/demo
-class MockOrders {
-  static List<OrderModel> get available => [
-        OrderModel(
-          id: 'ord-001',
-          code: '#ACM-001',
-          storeId: 'store-1',
-          storeName: 'Pollería El Rey',
-          storeAddress: 'Jr. Virrey Toledo 320, Huancavelica',
-          storeLat: -12.7869,
-          storeLng: -74.9734,
-          storePhone: '967000001',
-          customerId: 'cust-1',
-          customerName: 'María Torres',
-          customerPhone: '987111222',
-          deliveryAddress: 'Av. Los Héroes 150, Huancavelica',
-          deliveryLat: -12.7920,
-          deliveryLng: -74.9710,
-          totalAmount: 35.00,
-          deliveryFee: 5.00,
-          status: OrderStatus.assigned,
-          createdAt: DateTime.now().subtract(const Duration(minutes: 3)),
-        ),
-        OrderModel(
-          id: 'ord-002',
-          code: '#ACM-002',
-          storeId: 'store-2',
-          storeName: 'Chifa Fortuna',
-          storeAddress: 'Jr. Barranca 210, Huancavelica',
-          storeLat: -12.7855,
-          storeLng: -74.9720,
-          storePhone: '967000002',
-          customerId: 'cust-2',
-          customerName: 'Carlos Ruiz',
-          customerPhone: '987333444',
-          deliveryAddress: 'Urb. Santa Rosa Mz B Lt 5, Huancavelica',
-          deliveryLat: -12.7900,
-          deliveryLng: -74.9745,
-          totalAmount: 52.00,
-          deliveryFee: 6.00,
-          status: OrderStatus.assigned,
-          createdAt: DateTime.now().subtract(const Duration(minutes: 7)),
-        ),
-      ];
 }

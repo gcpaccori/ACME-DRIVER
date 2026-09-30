@@ -89,13 +89,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 AppTextField(
                   controller: _emailController,
                   label: AppStrings.email,
-                  hint: AppStrings.internalEmailHint,
+                  hint: AppStrings.emailHint,
                   keyboardType: TextInputType.emailAddress,
                   prefixIcon: const Icon(Icons.email_outlined),
                   validator: (v) {
                     if (v == null || v.isEmpty) return 'Ingresa tu correo';
                     if (!v.isValidEmail) return 'Correo inválido';
-                    if (!v.isAcmedidosEmail) return AppStrings.internalEmailError;
                     return null;
                   },
                 ),

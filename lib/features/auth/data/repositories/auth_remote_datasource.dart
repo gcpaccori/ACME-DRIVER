@@ -1,7 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/app_strings.dart';
-import '../../../../core/extensions/extensions.dart';
 import '../../../../core/errors/app_exceptions.dart';
 import '../datasources/driver_profile_model.dart';
 
@@ -25,10 +24,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
   @override
   Future<DriverProfileModel> signIn(String email, String password) async {
-    if (!email.isAcmedidosEmail) {
-      throw const AppAuthException(AppStrings.internalEmailError);
-    }
-
     try {
       final response = await _client.auth.signInWithPassword(
         email: email.trim().toLowerCase(),
@@ -60,7 +55,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<DriverProfileModel> signUp(
       String email, String password, Map<String, dynamic> metadata) async {
-    // Las cuentas de repartidor se crean desde el panel de ACME con un correo @acmedidos.com.
+    // Las cuentas de repartidor se crean desde el panel de ACME.
     throw const AppAuthException(AppStrings.accountsCreatedByAcme);
   }
 
