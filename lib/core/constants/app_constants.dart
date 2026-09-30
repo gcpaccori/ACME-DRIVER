@@ -9,6 +9,7 @@ class AppConstants {
   static const String driversTable = 'drivers';
   static const String ordersTable = 'orders';
   static const String orderStatusHistoryTable = 'order_status_history';
+  static const String orderAssignmentsTable = 'order_assignments';
   static const String driverLocationsTable = 'driver_locations';
   static const String notificationsTable = 'notifications';
   static const String settlementsTable = 'settlements';
