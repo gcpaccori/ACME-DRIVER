@@ -1,4 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Sin INTERNET declarado el APK de release no puede hablar con Supabase. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Ubicacion solo con la app en uso, para asignar y seguir entregas. -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <application
         android:label="acme_driver"
         android:name="${applicationName}"
