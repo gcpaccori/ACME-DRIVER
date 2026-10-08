@@ -1,3 +1,4 @@
+import '../../../../core/legal/legal_links.dart';
 import '../../../../core/extensions/extensions.dart';
 
 class SignUpFormData {
@@ -68,6 +69,9 @@ class SignUpFormData {
       'bankAccount': bankAccount,
       'locationEnabled': locationEnabled,
       'notificationsEnabled': notificationsEnabled,
+      // Evidencia del consentimiento (Ley 29733): qué aceptó, cuándo y qué versión.
+      'terms_accepted_at': DateTime.now().toUtc().toIso8601String(),
+      'legal_texts_version': LegalLinks.textsVersion,
     };
   }
 

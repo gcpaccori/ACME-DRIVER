@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter/gestures.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:permission_handler/permission_handler.dart';
+import '../../../../core/legal/legal_links.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/extensions/extensions.dart';
@@ -33,6 +36,10 @@ class _SignUpScreenStepsState extends ConsumerState<SignUpScreenSteps> {
   final _licenseNumberController = TextEditingController();
   final _addressController = TextEditingController();
   final _bankAccountController = TextEditingController();
+  late final _termsTap = TapGestureRecognizer()
+    ..onTap = () => LegalLinks.open(context, LegalLinks.terms);
+  late final _privacyTap = TapGestureRecognizer()
+    ..onTap = () => LegalLinks.open(context, LegalLinks.privacy);
 
   @override
   void dispose() {
@@ -45,6 +52,8 @@ class _SignUpScreenStepsState extends ConsumerState<SignUpScreenSteps> {
     _licenseNumberController.dispose();
     _addressController.dispose();
     _bankAccountController.dispose();
+    _termsTap.dispose();
+    _privacyTap.dispose();
     super.dispose();
   }
 
@@ -64,8 +73,9 @@ class _SignUpScreenStepsState extends ConsumerState<SignUpScreenSteps> {
 
   Future<void> _requestNotificationPermission() async {
     try {
+      final status = await Permission.notification.request();
       setState(() {
-        _formData.notificationsEnabled = true;
+        _formData.notificationsEnabled = status.isGranted;
       });
     } catch (e) {
       if (mounted) {
@@ -805,23 +815,29 @@ class _SignUpScreenStepsState extends ConsumerState<SignUpScreenSteps> {
                         text: TextSpan(
                           text: 'He leído y acepto los ',
                           style: context.textTheme.bodySmall,
-                          children: const [
+                          children: [
                             TextSpan(
                               text: 'términos de servicio',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 color: AppColors.primary,
                                 decoration: TextDecoration.underline,
                               ),
+                              recognizer: _termsTap,
                             ),
-                            TextSpan(text: ' y la '),
+                            const TextSpan(text: ' y la '),
                             TextSpan(
                               text: 'política de privacidad',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 color: AppColors.primary,
                                 decoration: TextDecoration.underline,
                               ),
+                              recognizer: _privacyTap,
                             ),
-                            TextSpan(text: ' de ACME PEDIDOS.'),
+                            const TextSpan(
+                              text: ' de ACME PEDIDOS, y autorizo el tratamiento de mis datos '
+                                  '(DNI, licencia, vehículo, cuenta bancaria y ubicación) para '
+                                  'asignarme pedidos, seguir las entregas y pagarme.',
+                            ),
                           ],
                         ),
                       ),
@@ -857,7 +873,7 @@ class _SignUpScreenStepsState extends ConsumerState<SignUpScreenSteps> {
             ),
             const SizedBox(height: 12),
             Text(
-              'Al continuar, aceptas que tenemos permiso para acceder a tu ubicación y enviarte notificaciones cuando sea necesario.',
+              'Solo usamos tu ubicación mientras la app está en uso para asignarte pedidos y que el cliente siga la entrega. Puedes retirar los permisos cuando quieras desde los ajustes del teléfono.',
               style: context.textTheme.bodySmall,
             ),
           ],
