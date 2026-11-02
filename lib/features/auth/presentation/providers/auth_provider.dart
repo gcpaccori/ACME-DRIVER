@@ -56,6 +56,11 @@ class AuthNotifier extends StateNotifier<AsyncValue<DriverProfileModel?>> {
   }
 
   Future<void> signOut() async {
+    // Sale de turno mientras la sesion sigue viva; despues la base ya no sabe
+    // quien es y el repartidor seguiria contando 15 minutos.
+    try {
+      await Supabase.instance.client.rpc('driver_set_presence', params: {'p_online': false});
+    } catch (_) {}
     await _dataSource.signOut();
     state = const AsyncValue.data(null);
   }

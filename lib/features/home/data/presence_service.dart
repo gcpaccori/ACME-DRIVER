@@ -23,6 +23,9 @@ class PresenceService {
 
   final SupabaseClient _client;
   Timer? _timer;
+  // Sube cada vez que se detiene: un latido "en linea" que seguia esperando la
+  // posicion ve que cambio y no se manda, asi no pisa el "fuera de linea".
+  int _generacion = 0;
 
   bool get activo => _timer != null;
 
@@ -33,14 +36,17 @@ class PresenceService {
   }
 
   Future<void> detener({bool avisar = true}) async {
+    _generacion++;
     _timer?.cancel();
     _timer = null;
     if (avisar) await _latido(false);
   }
 
   Future<void> _latido(bool online) async {
+    final generacion = _generacion;
     try {
       final pos = online ? await _posicion() : null;
+      if (online && generacion != _generacion) return;
       await _client.rpc('driver_set_presence', params: {
         'p_online': online,
         'p_lat': pos?.latitude,
@@ -71,6 +77,7 @@ class PresenceService {
   }
 
   void dispose() {
+    _generacion++;
     _timer?.cancel();
     _timer = null;
   }
