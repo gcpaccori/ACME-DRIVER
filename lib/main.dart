@@ -5,6 +5,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'core/theme/app_theme.dart';
 import 'core/router/app_router.dart';
 import 'core/network/supabase_config.dart';
+import 'features/home/data/presence_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -30,6 +31,8 @@ class AcmeDriverApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
+    // Latido "en turno": cuenta al repartidor para la alta demanda y el tiempo estimado.
+    ref.watch(presenceProvider);
 
     return MaterialApp.router(
       title: 'ACME-DRIVER',
